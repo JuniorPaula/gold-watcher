@@ -36,6 +36,8 @@ func main() {
 	myApp.MainWindow.SetFixedSize(true)
 	myApp.MainWindow.SetMaster()
 
+	myApp.makeUI()
+
 	// show and run application
 	myApp.MainWindow.ShowAndRun()
 }
