@@ -1,6 +1,10 @@
 package main
 
 import (
+	"goldwatcher/repository"
+	"strconv"
+	"time"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
@@ -31,6 +35,32 @@ func (app *Config) addHoldingsDialog() dialog.Dialog {
 	app.AddHoldingsPurchseDateEntry = purchaseDateEntry
 	app.AddHoldingsPurchsePriceEntry = purchasePriceEntry
 
+	dateValidator := func(s string) error {
+		if _, err := time.Parse("2006-01-02", s); err != nil {
+			return err
+		}
+		return nil
+	}
+	purchaseDateEntry.Validator = dateValidator
+
+	isIntvalidator := func(s string) error {
+		_, err := strconv.Atoi(s)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	addAmountEntry.Validator = isIntvalidator
+
+	isFloatValidator := func(s string) error {
+		_, err := strconv.ParseFloat(s, 32)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	purchasePriceEntry.Validator = isFloatValidator
+
 	purchaseDateEntry.PlaceHolder = "YYYY-MM-DD"
 
 	addForm := dialog.NewForm(
@@ -44,7 +74,19 @@ func (app *Config) addHoldingsDialog() dialog.Dialog {
 		},
 		func(valid bool) {
 			if valid {
-				//
+				amount, _ := strconv.Atoi(addAmountEntry.Text)
+				purchaseDate, _ := time.Parse("2006-01-02", purchaseDateEntry.Text)
+				purchaPrice, _ := strconv.ParseFloat(purchasePriceEntry.Text, 32)
+
+				_, err := app.DB.InsertHolding(repository.Holdings{
+					Amount:        amount,
+					PurchaseDate:  purchaseDate,
+					PurchasePrice: int(purchaPrice),
+				})
+				if err != nil {
+					app.ErrorLog.Println(err)
+				}
+				app.refreshHoldingsTable()
 			}
 		},
 		app.MainWindow)
